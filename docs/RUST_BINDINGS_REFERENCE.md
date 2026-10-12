@@ -241,8 +241,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .log_level(LogLevel::Info)
         .data_dir("/path/to/storage/data")
         .storage_quota(100 * 1024 * 1024) // 100 MB
-        .max_peers(50)
-        .discovery_port(8090);
+        .max_peers(50);
 
     // ========================================
     // 2. Node Creation

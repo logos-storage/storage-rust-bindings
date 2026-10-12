@@ -191,6 +191,7 @@ fn upload_init_sync(node: &StorageNode, options: &UploadOptions) -> Result<Strin
                 ctx as *mut _,
                 c_filepath.as_ptr(),
                 chunk_size,
+                options.advertise,
                 Some(crate::callback::c_callback),
                 context_ptr.as_ptr(),
             )

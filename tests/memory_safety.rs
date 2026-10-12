@@ -41,8 +41,7 @@ async fn test_no_memory_leak() {
         let temp_dir = tempdir().unwrap();
         let config = StorageConfig::new()
             .log_level(LogLevel::Error)
-            .data_dir(temp_dir.path().join(format!("storage_{}", i)))
-            .discovery_port(8090 + i as u16); // Use unique port to avoid conflicts
+            .data_dir(temp_dir.path().join(format!("storage_{}", i)));
 
         let node = StorageNode::new(config).await.unwrap();
         node.start().await.unwrap();
@@ -60,8 +59,7 @@ async fn test_no_memory_leak_with_operations() {
         let temp_dir = tempdir().unwrap();
         let config = StorageConfig::new()
             .log_level(LogLevel::Error)
-            .data_dir(temp_dir.path().join(format!("storage_{}", i)))
-            .discovery_port(8090 + i as u16); // Use unique port to avoid conflicts
+            .data_dir(temp_dir.path().join(format!("storage_{}", i)));
 
         let node = StorageNode::new(config).await.unwrap();
         node.start().await.unwrap();
@@ -81,8 +79,7 @@ async fn test_multiple_references_prevent_destroy() {
     let temp_dir = tempdir().unwrap();
     let config = StorageConfig::new()
         .log_level(LogLevel::Error)
-        .data_dir(temp_dir.path().join("storage"))
-        .discovery_port(8092);
+        .data_dir(temp_dir.path().join("storage"));
 
     let node = StorageNode::new(config).await.unwrap();
     let node_clone = node.clone(); // Create a second reference

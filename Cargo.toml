@@ -1,6 +1,6 @@
 [package]
 name = "storage-bindings"
-version = "0.4.4"
+version = "0.5.3"
 edition = "2021"
 description = "Rust bindings for Storage, the Decentralized Durability Engine"
 license = "MIT"
@@ -13,10 +13,10 @@ categories = ["api-bindings", "network-programming"]
 # Set this to a specific version from https://github.com/logos-storage/logos-storage-nim/releases
 #
 # Version formats:
-# - Stable: "v0.4.4"
+# - Stable: "v0.5.3"
 # - Latest: Leave empty or remove to use latest stable release
 [package.metadata.prebuilt]
-libstorage = "v0.4.4"
+libstorage = "v0.5.3"
 
 [lib]
 name = "storage_bindings"

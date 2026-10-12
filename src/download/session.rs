@@ -54,7 +54,9 @@ pub async fn download_init(node: &StorageNode, cid: &str, options: &DownloadOpti
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                false,
+                options.local,
+                options.private,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )
@@ -151,7 +153,9 @@ pub(crate) fn download_init_sync(
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                false,
+                options.local,
+                options.private,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )

@@ -9,8 +9,8 @@
 use std::fs::File;
 use std::io::Write;
 use storage_bindings::{
-    connect, download_stream, upload_file, DownloadStreamOptions, LogLevel, StorageConfig,
-    StorageNode, UploadOptions,
+    connect, download_stream, upload_file, DownloadStreamOptions, FetchOptions, LogLevel,
+    StorageConfig, StorageNode, UploadOptions,
 };
 use tempfile::tempdir;
 
@@ -40,7 +40,6 @@ async fn test_two_node_network() -> Result<(), Box<dyn std::error::Error>> {
         .data_dir(&node1_dir)
         .storage_quota(100 * 1024 * 1024)
         .max_peers(50)
-        .discovery_port(8092)
         .listen_ip("0.0.0.0")
         .listen_port(0);
 
@@ -62,7 +61,6 @@ async fn test_two_node_network() -> Result<(), Box<dyn std::error::Error>> {
         .data_dir(&node2_dir)
         .storage_quota(100 * 1024 * 1024)
         .max_peers(50)
-        .discovery_port(8093)
         .add_bootstrap_node(&debug1.spr);
 
     node2_config.listen_ip = Some("0.0.0.0".to_string());
@@ -146,7 +144,7 @@ async fn test_two_node_network() -> Result<(), Box<dyn std::error::Error>> {
     let fetch_timeout = tokio::time::Duration::from_secs(30);
     let fetch_result = tokio::time::timeout(
         fetch_timeout,
-        storage_bindings::fetch(&node2, &upload_result.cid),
+        storage_bindings::fetch(&node2, &upload_result.cid, &FetchOptions::new()),
     )
     .await;
 

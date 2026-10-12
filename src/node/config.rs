@@ -149,10 +149,6 @@ pub struct StorageConfig {
     #[serde(rename = "nat", default, skip_serializing_if = "Option::is_none")]
     pub nat: Option<String>,
 
-    /// Discovery (UDP) port (default: 8090)
-    #[serde(rename = "disc-port", default, skip_serializing_if = "Option::is_none")]
-    pub discovery_port: Option<u16>,
-
     /// Source of network (secp256k1) private key file path or name (default: "key")
     #[serde(
         rename = "net-privkey",
@@ -234,6 +230,16 @@ pub struct StorageConfig {
     )]
     pub block_retries: Option<u32>,
 
+    /// Announce the content to the DHT and become a provider for this content.
+    /// When false, the node announces nothing to the DHT, whatever the setting
+    /// of each dataset (default: true)
+    #[serde(
+        rename = "advertise-content",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub advertise_content: Option<bool>,
+
     /// Log file path (default: "" - no log file)
     #[serde(rename = "log-file", default, skip_serializing_if = "Option::is_none")]
     pub log_file: Option<PathBuf>,
@@ -289,7 +295,6 @@ impl Default for StorageConfig {
             listen_ip: None,
             listen_port: None,
             nat: Some("auto".to_string()),
-            discovery_port: Some(8090),
             net_priv_key_file: None,
             network: None,
             bootstrap_nodes: vec![],
@@ -303,6 +308,7 @@ impl Default for StorageConfig {
             block_maintenance_interval: Some(10 * 60),    // 10 minutes in seconds
             block_maintenance_number_of_blocks: Some(1000),
             block_retries: Some(3000),
+            advertise_content: None,
             log_file: None,
             mix_enabled: None,
             mix_pool: None,
@@ -326,7 +332,6 @@ impl StorageConfig {
             listen_ip: None,
             listen_port: None,
             nat: None,
-            discovery_port: None,
             net_priv_key_file: None,
             network: None,
             bootstrap_nodes: vec![],
@@ -340,6 +345,7 @@ impl StorageConfig {
             block_maintenance_interval: None,
             block_maintenance_number_of_blocks: None,
             block_retries: None,
+            advertise_content: None,
             log_file: None,
             mix_enabled: None,
             mix_pool: None,
@@ -387,12 +393,6 @@ impl StorageConfig {
     /// Set the repository kind
     pub fn repo_kind(mut self, kind: RepoKind) -> Self {
         self.repo_kind = Some(kind);
-        self
-    }
-
-    /// Set the discovery port
-    pub fn discovery_port(mut self, port: u16) -> Self {
-        self.discovery_port = Some(port);
         self
     }
 
@@ -480,6 +480,12 @@ impl StorageConfig {
         self
     }
 
+    /// Set whether the node announces its content to the DHT
+    pub fn advertise_content(mut self, enabled: bool) -> Self {
+        self.advertise_content = Some(enabled);
+        self
+    }
+
     /// Set the log file path
     pub fn log_file<P: Into<PathBuf>>(mut self, path: P) -> Self {
         self.log_file = Some(path.into());
@@ -553,7 +559,6 @@ impl StorageConfig {
     /// - `STORAGE_LOG_FORMAT` - Log format (auto, colors, nocolors, json)
     /// - `STORAGE_STORAGE_QUOTA` - Storage quota in bytes (supports suffixes: K, M, G, T)
     /// - `STORAGE_MAX_PEERS` - Maximum number of peers
-    /// - `STORAGE_DISCOVERY_PORT` - Discovery port
     /// - `STORAGE_NUM_THREADS` - Number of worker threads
     /// - `STORAGE_REPO_KIND` - Repository kind (fs, sqlite, leveldb)
     /// - `STORAGE_NAT` - NAT configuration
@@ -597,12 +602,6 @@ impl StorageConfig {
                 Some(max_peers.parse().map_err(|e| {
                     StorageError::config_error(format!("Invalid max peers: {}", e))
                 })?);
-        }
-
-        if let Ok(discovery_port) = env::var("STORAGE_DISCOVERY_PORT") {
-            config.discovery_port = Some(discovery_port.parse().map_err(|e| {
-                StorageError::config_error(format!("Invalid discovery port: {}", e))
-            })?);
         }
 
         if let Ok(num_threads) = env::var("STORAGE_NUM_THREADS") {
@@ -651,9 +650,6 @@ impl StorageConfig {
         if env_config.max_peers.is_some() {
             self.max_peers = env_config.max_peers;
         }
-        if env_config.discovery_port.is_some() {
-            self.discovery_port = env_config.discovery_port;
-        }
         if env_config.num_threads.is_some() {
             self.num_threads = env_config.num_threads;
         }
@@ -698,9 +694,6 @@ impl StorageConfig {
         if file_config.max_peers.is_some() {
             self.max_peers = file_config.max_peers;
         }
-        if file_config.discovery_port.is_some() {
-            self.discovery_port = file_config.discovery_port;
-        }
         if file_config.num_threads.is_some() {
             self.num_threads = file_config.num_threads;
         }
@@ -737,9 +730,6 @@ impl StorageConfig {
         if let Some(max_peers) = args.max_peers {
             self.max_peers = Some(max_peers);
         }
-        if let Some(discovery_port) = args.discovery_port {
-            self.discovery_port = Some(discovery_port);
-        }
 
         Ok(self)
     }
@@ -752,7 +742,6 @@ pub struct CliArgs {
     pub data_dir: Option<String>,
     pub storage_quota: Option<String>,
     pub max_peers: Option<u32>,
-    pub discovery_port: Option<u16>,
 }
 
 /// Parse a byte string with optional suffix (K, M, G, T)
@@ -946,7 +935,6 @@ mod tests {
             "listen-ip":"127.0.0.1",
             "listen-port":8080,
             "nat":"auto",
-            "disc-port":8090,
             "network":"logos.test",
             "bootstrap-node":["/ip4/127.0.0.1/tcp/8081"],
             "no-bootstrap-node":false,
@@ -978,7 +966,6 @@ mod tests {
         assert_eq!(config.listen_ip, Some("127.0.0.1".to_string()));
         assert_eq!(config.listen_port, Some(8080));
         assert_eq!(config.nat, Some("auto".to_string()));
-        assert_eq!(config.discovery_port, Some(8090));
         assert_eq!(config.network, Some(NetworkPreset::LogosTest));
         assert_eq!(config.bootstrap_nodes, vec!["/ip4/127.0.0.1/tcp/8081"]);
         assert_eq!(config.no_bootstrap_node, Some(false));
@@ -1111,6 +1098,17 @@ mod tests {
     }
 
     #[test]
+    fn test_advertise_content_serialization() {
+        let config = StorageConfig::new().advertise_content(false);
+        let json_str = config.to_json().expect("Failed to serialize to JSON");
+
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json_str).expect("Serialized JSON should be valid");
+
+        assert_eq!(parsed["advertise-content"], false);
+    }
+
+    #[test]
     fn test_log_file_builder() {
         let config = StorageConfig::new().log_file("/var/log/storage.log");
         assert_eq!(config.log_file, Some(PathBuf::from("/var/log/storage.log")));
@@ -1127,7 +1125,6 @@ mod tests {
             .enable_metrics(true)
             .metrics_address("127.0.0.1")
             .metrics_port(8080)
-            .discovery_port(8090)
             .max_peers(50)
             .storage_quota(1024 * 1024 * 1024) // 1 GB
             .repo_kind(RepoKind::Sqlite)
@@ -1144,7 +1141,6 @@ mod tests {
         assert_eq!(config.metrics_enabled, Some(true));
         assert_eq!(config.metrics_address, Some("127.0.0.1".to_string()));
         assert_eq!(config.metrics_port, Some(8080));
-        assert_eq!(config.discovery_port, Some(8090));
         assert_eq!(config.max_peers, Some(50));
         assert_eq!(config.storage_quota, Some(1024 * 1024 * 1024));
         assert_eq!(config.repo_kind, Some(RepoKind::Sqlite));

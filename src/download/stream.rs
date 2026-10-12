@@ -109,7 +109,10 @@ pub async fn download_stream(
     let download_options = DownloadOptions::new(cid)
         .chunk_size(chunk_size)
         .timeout(options.timeout.unwrap_or(300))
-        .verify(options.verify);
+        .verify(options.verify)
+        .local(options.local)
+        .private(options.private)
+        .advertise(options.advertise);
 
     download_init_sync(node, cid, &download_options)?;
 
@@ -129,7 +132,6 @@ pub async fn download_stream(
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                options.local,
                 c_filepath.as_ptr(),
                 Some(c_callback),
                 context_ptr.as_ptr(),

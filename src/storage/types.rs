@@ -114,6 +114,43 @@ impl Manifest {
     }
 }
 
+/// Options to fetch a dataset into the local node
+#[derive(Debug, Clone)]
+pub struct FetchOptions {
+    /// Whether to download through the Mix transport
+    pub private: bool,
+    /// When false, the dataset is neither announced to the DHT nor served to other peers
+    pub advertise: bool,
+}
+
+impl Default for FetchOptions {
+    fn default() -> Self {
+        Self {
+            private: false,
+            advertise: true,
+        }
+    }
+}
+
+impl FetchOptions {
+    /// Create new fetch options
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set whether to download through the Mix transport
+    pub fn private(mut self, private: bool) -> Self {
+        self.private = private;
+        self
+    }
+
+    /// Set whether to announce the dataset to the DHT and serve it to other peers
+    pub fn advertise(mut self, advertise: bool) -> Self {
+        self.advertise = advertise;
+        self
+    }
+}
+
 /// Storage space information
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Space {

@@ -29,8 +29,7 @@ async fn test_basic_usage() -> Result<(), Box<dyn std::error::Error>> {
         .log_level(LogLevel::Info)
         .data_dir(temp_dir.path().join("storage_data"))
         .storage_quota(100 * 1024 * 1024)
-        .max_peers(50)
-        .discovery_port(8090);
+        .max_peers(50);
 
     let node = StorageNode::new(config).await?;
     node.start().await?;

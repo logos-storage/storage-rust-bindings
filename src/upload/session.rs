@@ -47,6 +47,7 @@ pub async fn upload_init(node: &StorageNode, options: &UploadOptions) -> Result<
                 ctx as *mut _,
                 c_filepath.as_ptr(),
                 chunk_size,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )

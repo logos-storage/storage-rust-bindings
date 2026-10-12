@@ -109,7 +109,6 @@
 //! - `STORAGE_LOG_FORMAT` - Log format (auto, colors, nocolors, json)
 //! - `STORAGE_STORAGE_QUOTA` - Storage quota in bytes (supports suffixes: K, M, G, T)
 //! - `STORAGE_MAX_PEERS` - Maximum number of peers
-//! - `STORAGE_DISCOVERY_PORT` - Discovery port
 //! - `STORAGE_NUM_THREADS` - Number of worker threads
 //! - `STORAGE_REPO_KIND` - Repository kind (fs, sqlite, leveldb)
 //! - `STORAGE_NAT` - NAT configuration
@@ -165,7 +164,8 @@ pub use debug::{debug, peer_debug, update_log_level, DebugInfo};
 
 pub use download::{
     download_cancel, download_chunk, download_init, download_manifest, download_stream,
-    DownloadOptions, DownloadProgress, DownloadResult, DownloadStreamOptions,
+    DownloadManifestOptions, DownloadOptions, DownloadProgress, DownloadResult,
+    DownloadStreamOptions,
 };
 
 pub use error::{Result, StorageError};
@@ -177,7 +177,10 @@ pub use p2p::{
     ConnectionQuality, PeerInfo, PeerRecord,
 };
 
-pub use storage::{delete, exists, fetch, manifests, space, Manifest as StorageManifest, Space};
+pub use storage::{
+    delete, exists, fetch, get_advertise, manifests, set_advertise, space, FetchOptions,
+    Manifest as StorageManifest, Space,
+};
 
 pub use upload::{
     upload_cancel, upload_chunk, upload_file, upload_finalize, upload_init, upload_reader,

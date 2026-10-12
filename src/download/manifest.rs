@@ -1,10 +1,14 @@
 use crate::callback::{c_callback, with_libstorage_lock, CallbackFuture};
-use crate::download::types::Manifest;
+use crate::download::types::{DownloadManifestOptions, Manifest};
 use crate::error::{Result, StorageError};
 use crate::ffi::{storage_download_manifest, string_to_c_string};
 use crate::node::lifecycle::StorageNode;
 
-pub async fn download_manifest(node: &StorageNode, cid: &str) -> Result<Manifest> {
+pub async fn download_manifest(
+    node: &StorageNode,
+    cid: &str,
+    options: &DownloadManifestOptions,
+) -> Result<Manifest> {
     if cid.is_empty() {
         return Err(StorageError::invalid_parameter(
             "cid",
@@ -22,6 +26,8 @@ pub async fn download_manifest(node: &StorageNode, cid: &str) -> Result<Manifest
             storage_download_manifest(
                 ctx as *mut _,
                 c_cid.as_ptr(),
+                options.private,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )

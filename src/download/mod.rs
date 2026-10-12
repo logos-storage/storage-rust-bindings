@@ -33,7 +33,8 @@ pub mod types;
 
 // Re-export types
 pub use types::{
-    DownloadOptions, DownloadProgress, DownloadResult, DownloadStreamOptions, Manifest,
+    DownloadManifestOptions, DownloadOptions, DownloadProgress, DownloadResult,
+    DownloadStreamOptions, Manifest,
 };
 
 // Re-export manifest operations
