@@ -79,3 +79,24 @@ async fn test_set_advertise() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_set_advertise_on_unadvertised_upload() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = env_logger::try_init();
+    let temp_dir = tempdir()?;
+
+    let node = StorageNode::new(base_config(temp_dir.path())).await?;
+    node.start().await?;
+
+    let options = UploadOptions::new().filepath("hello.txt").advertise(false);
+    let cid = upload(&node, options).await?;
+
+    set_advertise(&node, &cid, true).await?;
+
+    assert!(
+        get_advertise(&node, &cid).await?,
+        "cid should be advertised"
+    );
+
+    Ok(())
+}

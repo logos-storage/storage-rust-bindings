@@ -19,6 +19,9 @@ use std::sync::{Arc, Mutex};
 /// to a file, writer, or custom callback. This function handles the complete download
 /// process including session management, progress tracking, and error handling.
 ///
+/// If a session already exists for this CID, it is kept and the `local` and `advertise`
+/// options are ignored. A different `private` value is an error.
+///
 /// # Arguments
 ///
 /// * `node` - The Storage node to use for the download

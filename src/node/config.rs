@@ -669,6 +669,7 @@ impl StorageConfig {
     /// Merge configuration from a JSON file
     ///
     /// File values override the current configuration values.
+    /// An empty `bootstrap-node` or `dht-mix-proxy` list in the file keeps the current list.
     pub fn merge_with_file(mut self, path: &Path) -> Result<Self> {
         let file_content = std::fs::read_to_string(path).map_err(|e| {
             StorageError::config_error(format!("Failed to read config file: {}", e))
