@@ -43,8 +43,6 @@ The cache is organized by version and platform:
 │   │   ├── libstorage.a
 │   │   ├── libnatpmp.a
 │   │   ├── libminiupnpc.a
-│   │   ├── libbacktrace.a
-│   │   ├── libplum.a
 │   │   └── libstorage.h
 │   └── darwin-arm64/
 │       └── ...

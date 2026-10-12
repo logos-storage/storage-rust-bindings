@@ -199,9 +199,7 @@ pub async fn download_to_file(
     cid: &str,
     filepath: &std::path::Path,
 ) -> Result<DownloadResult> {
-    let options = DownloadStreamOptions::new(cid)
-        .filepath(filepath.to_path_buf())
-        .local(true);
+    let options = DownloadStreamOptions::new(cid).filepath(filepath.to_path_buf());
 
     download_stream(node, cid, options).await
 }

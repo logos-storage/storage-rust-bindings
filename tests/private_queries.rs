@@ -26,11 +26,14 @@ async fn test_private_fetch_without_mix_fails() -> Result<(), Box<dyn std::error
     upload_chunk(&node, &session_id, b"Hello World!".to_vec()).await?;
     let cid = upload_finalize(&node, &session_id).await?;
 
+    let err = fetch(&node, &cid, &FetchOptions::new().private(true))
+        .await
+        .expect_err("a private fetch without Mix configured should fail");
+
     assert!(
-        fetch(&node, &cid, &FetchOptions::new().private(true))
-            .await
-            .is_err(),
-        "a private fetch without Mix configured should fail"
+        err.to_string().contains("Mix transport is not enabled"),
+        "unexpected error: {}",
+        err
     );
 
     Ok(())

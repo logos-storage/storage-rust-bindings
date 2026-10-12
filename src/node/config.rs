@@ -706,6 +706,67 @@ impl StorageConfig {
         if file_config.agent_string.is_some() {
             self.agent_string = file_config.agent_string;
         }
+        if file_config.advertise_content.is_some() {
+            self.advertise_content = file_config.advertise_content;
+        }
+        if file_config.metrics_enabled.is_some() {
+            self.metrics_enabled = file_config.metrics_enabled;
+        }
+        if file_config.metrics_address.is_some() {
+            self.metrics_address = file_config.metrics_address;
+        }
+        if file_config.metrics_port.is_some() {
+            self.metrics_port = file_config.metrics_port;
+        }
+        if file_config.listen_ip.is_some() {
+            self.listen_ip = file_config.listen_ip;
+        }
+        if file_config.listen_port.is_some() {
+            self.listen_port = file_config.listen_port;
+        }
+        if file_config.net_priv_key_file.is_some() {
+            self.net_priv_key_file = file_config.net_priv_key_file;
+        }
+        if file_config.network.is_some() {
+            self.network = file_config.network;
+        }
+        if !file_config.bootstrap_nodes.is_empty() {
+            self.bootstrap_nodes = file_config.bootstrap_nodes;
+        }
+        if file_config.no_bootstrap_node.is_some() {
+            self.no_bootstrap_node = file_config.no_bootstrap_node;
+        }
+        if file_config.block_ttl.is_some() {
+            self.block_ttl = file_config.block_ttl;
+        }
+        if file_config.block_maintenance_interval.is_some() {
+            self.block_maintenance_interval = file_config.block_maintenance_interval;
+        }
+        if file_config.block_maintenance_number_of_blocks.is_some() {
+            self.block_maintenance_number_of_blocks =
+                file_config.block_maintenance_number_of_blocks;
+        }
+        if file_config.block_retries.is_some() {
+            self.block_retries = file_config.block_retries;
+        }
+        if file_config.log_file.is_some() {
+            self.log_file = file_config.log_file;
+        }
+        if file_config.mix_enabled.is_some() {
+            self.mix_enabled = file_config.mix_enabled;
+        }
+        if file_config.mix_pool.is_some() {
+            self.mix_pool = file_config.mix_pool;
+        }
+        if file_config.mix_pool_json.is_some() {
+            self.mix_pool_json = file_config.mix_pool_json;
+        }
+        if !file_config.dht_mix_proxies.is_empty() {
+            self.dht_mix_proxies = file_config.dht_mix_proxies;
+        }
+        if file_config.dht_proxy_max_in_flight.is_some() {
+            self.dht_proxy_max_in_flight = file_config.dht_proxy_max_in_flight;
+        }
 
         Ok(self)
     }
@@ -1106,6 +1167,74 @@ mod tests {
             serde_json::from_str(&json_str).expect("Serialized JSON should be valid");
 
         assert_eq!(parsed["advertise-content"], false);
+    }
+
+    #[test]
+    fn test_merge_with_file_overrides_all_fields() {
+        let json_str = r#"{
+            "log-level":"error",
+            "log-format":"json",
+            "metrics":true,
+            "metrics-address":"192.168.1.100",
+            "metrics-port":9000,
+            "data-dir":"/tmp/storage",
+            "listen-ip":"127.0.0.1",
+            "listen-port":8080,
+            "nat":"extip:127.0.0.1",
+            "net-privkey":"/tmp/key",
+            "network":"logos.test",
+            "bootstrap-node":["spr:node1"],
+            "no-bootstrap-node":true,
+            "max-peers":100,
+            "num-threads":4,
+            "agent-string":"TestAgent/1.0",
+            "repo-kind":"sqlite",
+            "storage-quota":2147483648,
+            "block-ttl":86400,
+            "block-mi":600,
+            "block-mn":500,
+            "block-retries":1000,
+            "advertise-content":false,
+            "log-file":"/var/log/storage.log",
+            "mix-enabled":true,
+            "mix-pool":"/tmp/pool.json",
+            "mix-pool-json":"{\"relays\":[]}",
+            "dht-mix-proxy":["spr:proxy1"],
+            "dht-proxy-max-inflight":8
+        }"#;
+        let dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let path = dir.path().join("config.json");
+        std::fs::write(&path, json_str).expect("Failed to write config");
+
+        let merged = StorageConfig::new()
+            .merge_with_file(&path)
+            .expect("Failed to merge config file");
+
+        let merged_json = serde_json::to_value(&merged).expect("Failed to serialize merged config");
+        let file_json: serde_json::Value =
+            serde_json::from_str(json_str).expect("Config file should be valid JSON");
+        assert_eq!(merged_json, file_json);
+    }
+
+    #[test]
+    fn test_merge_with_file_keeps_unset_fields() {
+        let dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let path = dir.path().join("config.json");
+        std::fs::write(&path, "{}").expect("Failed to write config");
+
+        let config = StorageConfig::new()
+            .listen_port(8080)
+            .add_bootstrap_node("spr:node1");
+
+        let merged = config
+            .clone()
+            .merge_with_file(&path)
+            .expect("Failed to merge config file");
+
+        assert_eq!(
+            merged.to_json().expect("Failed to serialize merged config"),
+            config.to_json().expect("Failed to serialize config")
+        );
     }
 
     #[test]

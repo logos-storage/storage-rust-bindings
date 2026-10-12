@@ -15,6 +15,9 @@ use crate::node::lifecycle::StorageNode;
 /// Creates a new download session for the specified content ID (CID) with the given options.
 /// This prepares the node to download content from the Storage network.
 ///
+/// If a session already exists for this CID, it is kept and the new `local`,
+/// `advertise` and `chunk_size` options are ignored. A different `private` value is an error.
+///
 /// # Arguments
 ///
 /// * `node` - The Storage node to use for the download
