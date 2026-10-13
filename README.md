@@ -8,7 +8,7 @@ Include in your Cargo project:
 
 ```toml
 [dependencies]
-storage-bindings = "0.4.4"
+storage-bindings = "0.5.3"
 ```
 
 To learn how to use those bindings, take a look at the [integration tests](./tests/) directory.
@@ -38,13 +38,11 @@ The cache is organized by version and platform:
 
 ```
 ~/.cache/storage-bindings/
-├── v0.4.4/
+├── v0.5.3/
 │   ├── linux-amd64/
 │   │   ├── libstorage.a
 │   │   ├── libnatpmp.a
 │   │   ├── libminiupnpc.a
-│   │   ├── libbacktrace.a
-│   │   ├── libplum.a
 │   │   └── libstorage.h
 │   └── darwin-arm64/
 │       └── ...
@@ -93,13 +91,13 @@ Add to your `Cargo.toml`:
 
 ```toml
 [package.metadata.prebuilt]
-libstorage = "v0.4.4"
+libstorage = "v0.5.3"
 ```
 
 **Option 2: Environment variable (for local overrides)**
 
 ```bash
-export LOGOS_STORAGE_VERSION=v0.4.4
+export LOGOS_STORAGE_VERSION=v0.5.3
 cargo build
 ```
 
@@ -132,7 +130,7 @@ cargo build
 To use locally built libraries instead of downloading from GitHub, set the `STORAGE_BINDINGS_LOCAL_LIBS` environment variable to the path of the dist folder:
 
 ```bash
-export STORAGE_BINDINGS_LOCAL_LIBS=/path/to/libstorage-linux-amd64-v0.4.4-static
+export STORAGE_BINDINGS_LOCAL_LIBS=/path/to/libstorage-linux-amd64-v0.5.3-static
 cargo build
 ```
 
@@ -166,7 +164,11 @@ cargo test --test $test_name
 - **storage_management**: Demonstrates storage management operations
 - **two_node_network**: Shows two-node network setup and data transfer
 - **thread_safe_tests**: Tests thread-safe node lifecycle and concurrent operations
-- **private_queries**: Tests toggling Mix private queries
+- **thread_safety**: Tests that the async functions can be used across threads
+- **memory_safety**: Tests that the wrapper manages memory and resources correctly
+- **private_fetch**: Tests that a private fetch fails without Mix
+- **advertise**: Tests the advertise state of a dataset
+- **network**: Tests the network preset
 
 ## License
 

@@ -9,7 +9,7 @@
 
 use std::fs::File;
 use std::io::Write;
-use storage_bindings::{LogLevel, StorageConfig, StorageNode};
+use storage_bindings::{FetchOptions, LogLevel, StorageConfig, StorageNode};
 use tempfile::tempdir;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -27,8 +27,7 @@ async fn test_storage_management() -> Result<(), Box<dyn std::error::Error>> {
     let config = StorageConfig::new()
         .log_level(LogLevel::Error)
         .data_dir(temp_dir.path().join("storage_data"))
-        .block_retries(3000)
-        .discovery_port(8097);
+        .block_retries(3000);
 
     let node = StorageNode::new(config).await?;
     node.start().await?;
@@ -77,7 +76,7 @@ async fn test_storage_management() -> Result<(), Box<dyn std::error::Error>> {
 
     // Fetch manifest information
     println!("\nFetching manifest information:");
-    let manifest = storage_bindings::fetch(&node, &upload_result.cid).await?;
+    let manifest = storage_bindings::fetch(&node, &upload_result.cid, &FetchOptions::new()).await?;
     println!("  CID: {}", manifest.cid);
     println!("  Size: {} bytes", manifest.dataset_size);
     println!("  Block size: {} bytes", manifest.block_size);

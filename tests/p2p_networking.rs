@@ -18,8 +18,7 @@ async fn test_p2p_networking() -> Result<(), Box<dyn std::error::Error>> {
         .log_level(LogLevel::Error)
         .data_dir(temp_dir.path().join("storage_data"))
         .max_peers(50)
-        .block_retries(3000)
-        .discovery_port(8091);
+        .block_retries(3000);
 
     let node = StorageNode::new(config).await?;
     node.start().await?;

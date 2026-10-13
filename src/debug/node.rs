@@ -35,8 +35,6 @@ pub struct DebugInfo {
     pub id: String,
     pub addrs: Vec<String>,
     pub spr: String,
-    #[serde(rename = "providerAddresses")]
-    pub provider_addresses: Vec<String>,
     pub table: DiscoveryTable,
 }
 
@@ -49,13 +47,12 @@ pub struct DiscoveryTable {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocalNodeInfo {
-    #[serde(rename = "nodeId")]
-    pub node_id: String,
     #[serde(rename = "peerId")]
     pub peer_id: String,
-    pub record: String,
-    pub address: String,
-    pub seen: bool,
+    pub addresses: Vec<String>,
+    /// Unix time in seconds, None for the local node
+    #[serde(rename = "lastSeen")]
+    pub last_seen: Option<i64>,
 }
 
 impl DebugInfo {
@@ -71,10 +68,6 @@ impl DebugInfo {
         self.addrs.len()
     }
 
-    pub fn provider_address_count(&self) -> usize {
-        self.provider_addresses.len()
-    }
-
     pub fn discovery_node_count(&self) -> usize {
         self.table.nodes.len()
     }
@@ -83,7 +76,7 @@ impl DebugInfo {
         !self.id.is_empty()
             && !self.addrs.is_empty()
             && !self.spr.is_empty()
-            && !self.table.local_node.node_id.is_empty()
+            && !self.table.local_node.peer_id.is_empty()
     }
 
     pub fn health_status(&self) -> &'static str {
@@ -101,14 +94,11 @@ impl Default for DebugInfo {
             id: String::new(),
             addrs: Vec::new(),
             spr: String::new(),
-            provider_addresses: Vec::new(),
             table: DiscoveryTable {
                 local_node: LocalNodeInfo {
-                    node_id: String::new(),
                     peer_id: String::new(),
-                    record: String::new(),
-                    address: String::new(),
-                    seen: false,
+                    addresses: Vec::new(),
+                    last_seen: None,
                 },
                 nodes: Vec::new(),
             },

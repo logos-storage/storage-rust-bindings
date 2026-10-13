@@ -68,6 +68,8 @@ pub struct UploadOptions {
     pub verify: bool,
     pub metadata: Option<serde_json::Value>,
     pub timeout: Option<u64>,
+    /// When false, the dataset is neither announced to the DHT nor served to other peers
+    pub advertise: bool,
 }
 
 impl std::fmt::Debug for UploadOptions {
@@ -80,6 +82,7 @@ impl std::fmt::Debug for UploadOptions {
             .field("verify", &self.verify)
             .field("metadata", &self.metadata)
             .field("timeout", &self.timeout)
+            .field("advertise", &self.advertise)
             .finish()
     }
 }
@@ -94,6 +97,7 @@ impl Default for UploadOptions {
             verify: true,
             metadata: None,
             timeout: Some(300),
+            advertise: true,
         }
     }
 }
@@ -138,6 +142,11 @@ impl UploadOptions {
 
     pub fn timeout(mut self, timeout: u64) -> Self {
         self.timeout = Some(timeout);
+        self
+    }
+
+    pub fn advertise(mut self, advertise: bool) -> Self {
+        self.advertise = advertise;
         self
     }
 

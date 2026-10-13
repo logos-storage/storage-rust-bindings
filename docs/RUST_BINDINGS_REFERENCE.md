@@ -53,8 +53,8 @@ use crate::ffi::string_to_c_string;
 let rust_str = "Hello, Storage!";
 let c_str = string_to_c_string(rust_str);
 
-// c_str is now a *mut c_char that can be passed to C functions
-// IMPORTANT: Must be freed with free_c_string() when done
+// c_str is a SendSafeCString: pass c_str.as_ptr() to C functions
+// It is freed automatically when c_str goes out of scope
 ```
 
 #### C String to Rust String
@@ -71,9 +71,9 @@ unsafe {
 
 **Memory Ownership:**
 
-- **Rust → C**: The C string is allocated by Rust and must be freed by Rust
+- **Rust → C**: The C string is allocated by Rust and freed by Rust
 - **C → Rust**: The C string is borrowed and converted to an owned Rust String
-- Always call `free_c_string()` on strings created with `string_to_c_string()`
+- Strings created with `string_to_c_string()` are freed automatically when they go out of scope
 
 ### Arrays and Binary Data
 
@@ -110,7 +110,7 @@ let upload_options = UploadOptions::new()
 | Resource             | Owner                   | Cleanup Method                   |
 | -------------------- | ----------------------- | -------------------------------- |
 | Storage Node Context | Rust (`StorageNode`)    | Automatic via `Drop` trait       |
-| C Strings (Rust→C)   | Rust                    | Must call `free_c_string()`      |
+| C Strings (Rust→C)   | Rust                    | Automatic via `Drop` trait       |
 | C Strings (C→Rust)   | Rust                    | Automatic conversion to `String` |
 | Callback Context     | Rust (`CallbackFuture`) | Automatic via `Drop` trait       |
 
@@ -119,15 +119,14 @@ let upload_options = UploadOptions::new()
 **C Strings Created by Rust:**
 
 ```rust
-// ✅ CORRECT: Always free C strings created by Rust
+// ✅ CORRECT: Keep the wrapper while C uses the pointer
 let c_str = string_to_c_string("test");
-// ... use c_str ...
-unsafe { free_c_string(c_str); }
+// ... pass c_str.as_ptr() to C ...
+// c_str is freed automatically at the end of the scope
 
-// ❌ WRONG: Forgetting to free causes memory leak
-let c_str = string_to_c_string("test");
-// ... use c_str ...
-// Memory leak! c_str is never freed
+// ❌ WRONG: The wrapper is dropped at the end of the statement
+let ptr = unsafe { string_to_c_string("test").as_ptr() };
+// Dangling pointer! The string is already freed
 ```
 
 **Null Pointer Safety:**
@@ -241,8 +240,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .log_level(LogLevel::Info)
         .data_dir("/path/to/storage/data")
         .storage_quota(100 * 1024 * 1024) // 100 MB
-        .max_peers(50)
-        .discovery_port(8090);
+        .max_peers(50);
 
     // ========================================
     // 2. Node Creation
@@ -706,22 +704,21 @@ spawn(async move {
 });
 ```
 
-### 4. Free C Strings Promptly
+### 4. Keep C Strings Alive While C Uses Them
 
 ```rust
-// ✅ GOOD: Free C strings immediately after use
+// ✅ GOOD: The wrapper lives as long as the pointer is used
 let c_str = string_to_c_string("test");
 unsafe {
-    // ... use c_str ...
-    free_c_string(c_str);
+    // ... pass c_str.as_ptr() to C ...
 }
 
-// ❌ BAD: Forgetting to free
-let c_str = string_to_c_string("test");
+// ❌ BAD: The wrapper is dropped before the pointer is used
+let ptr = unsafe { string_to_c_string("test").as_ptr() };
 unsafe {
-    // ... use c_str ...
+    // ... pass ptr to C ...
 }
-// Memory leak!
+// Dangling pointer!
 ```
 
 ### 5. Use Progress Callbacks for Large Files

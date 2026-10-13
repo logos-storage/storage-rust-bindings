@@ -1,9 +1,9 @@
 use crate::callback::{c_callback, with_libstorage_lock, CallbackFuture};
 use crate::error::{Result, StorageError};
 use crate::ffi::{
-    c_str_to_string, storage_close, storage_destroy, storage_get_metrics, storage_new,
-    storage_peer_id, storage_repo, storage_revision, storage_spr, storage_start, storage_stop,
-    storage_toggle_private_queries, storage_version, string_to_c_string, SendSafePtr,
+    c_str_to_string, storage_close, storage_destroy, storage_get_metrics, storage_network,
+    storage_new, storage_peer_id, storage_repo, storage_revision, storage_spr, storage_start,
+    storage_stop, storage_version, string_to_c_string, SendSafePtr,
 };
 use crate::node::config::StorageConfig;
 use libc::c_void;
@@ -486,20 +486,8 @@ impl StorageNode {
         future.await
     }
 
-    /// Toggle routing of DHT queries over the Logos mix network.
-    ///
-    /// When enabled, all subsequent DHT queries are tunnelled over Mix; this
-    /// affects queries only, not advertisements.
-    ///
-    /// Enabling requires Mix to be configured: `mix_enabled` true and at least
-    /// one `dht_mix_proxies` set (see [`StorageConfig`]). Otherwise enabling
-    /// fails with an error. Disabling is always allowed.
-    ///
-    /// This is a temporary API and will likely be removed before mainnet.
-    ///
-    /// On success, returns the previous toggle state (true = private queries
-    /// were already enabled).
-    pub async fn toggle_private_queries(&self, enabled: bool) -> Result<bool> {
+    /// Get the name of the network preset configured, e.g. "logos.test"
+    pub async fn network(&self) -> Result<String> {
         let future = CallbackFuture::new();
         let context_ptr = future.context_ptr();
 
@@ -508,19 +496,13 @@ impl StorageNode {
             inner.ctx as *mut _
         };
 
-        let result = unsafe {
-            storage_toggle_private_queries(ctx, enabled, Some(c_callback), context_ptr.as_ptr())
-        };
+        let result = unsafe { storage_network(ctx, Some(c_callback), context_ptr.as_ptr()) };
 
         if result != 0 {
-            return Err(StorageError::node_error(
-                "toggle_private_queries",
-                "Failed to toggle private queries",
-            ));
+            return Err(StorageError::node_error("network", "Failed to get network"));
         }
 
-        let previous = future.await?;
-        Ok(previous == "true")
+        future.await
     }
 
     pub fn is_started(&self) -> bool {

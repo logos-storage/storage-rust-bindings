@@ -77,6 +77,12 @@ pub struct DownloadOptions {
     pub timeout: Option<u64>,
     /// Whether to verify the download after completion
     pub verify: bool,
+    /// Whether to download from the local store only (don't fetch from network)
+    pub local: bool,
+    /// Whether to download through the Mix transport
+    pub private: bool,
+    /// When false, the dataset is neither announced to the DHT nor served to other peers
+    pub advertise: bool,
 }
 
 impl std::fmt::Debug for DownloadOptions {
@@ -87,6 +93,9 @@ impl std::fmt::Debug for DownloadOptions {
             .field("on_progress", &self.on_progress.is_some())
             .field("timeout", &self.timeout)
             .field("verify", &self.verify)
+            .field("local", &self.local)
+            .field("private", &self.private)
+            .field("advertise", &self.advertise)
             .finish()
     }
 }
@@ -99,6 +108,9 @@ impl Clone for DownloadOptions {
             on_progress: None, // Cannot clone callback
             timeout: self.timeout,
             verify: self.verify,
+            local: self.local,
+            private: self.private,
+            advertise: self.advertise,
         }
     }
 }
@@ -109,11 +121,14 @@ impl serde::Serialize for DownloadOptions {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("DownloadOptions", 5)?;
+        let mut state = serializer.serialize_struct("DownloadOptions", 7)?;
         state.serialize_field("cid", &self.cid)?;
         state.serialize_field("chunk_size", &self.chunk_size)?;
         state.serialize_field("timeout", &self.timeout)?;
         state.serialize_field("verify", &self.verify)?;
+        state.serialize_field("local", &self.local)?;
+        state.serialize_field("private", &self.private)?;
+        state.serialize_field("advertise", &self.advertise)?;
         state.end()
     }
 }
@@ -127,6 +142,9 @@ impl DownloadOptions {
             on_progress: None,
             timeout: Some(300), // 5 minutes default
             verify: true,
+            local: false,
+            private: false,
+            advertise: true,
         }
     }
 
@@ -154,6 +172,24 @@ impl DownloadOptions {
     /// Set whether to verify the download
     pub fn verify(mut self, verify: bool) -> Self {
         self.verify = verify;
+        self
+    }
+
+    /// Set whether to download from the local store only
+    pub fn local(mut self, local: bool) -> Self {
+        self.local = local;
+        self
+    }
+
+    /// Set whether to download through the Mix transport
+    pub fn private(mut self, private: bool) -> Self {
+        self.private = private;
+        self
+    }
+
+    /// Set whether to announce the dataset to the DHT and serve it to other peers
+    pub fn advertise(mut self, advertise: bool) -> Self {
+        self.advertise = advertise;
         self
     }
 
@@ -202,6 +238,10 @@ pub struct DownloadStreamOptions {
     pub on_progress: Option<Box<dyn Fn(DownloadProgress) + Send + Sync>>,
     /// Whether to download locally only (don't fetch from network)
     pub local: bool,
+    /// Whether to download through the Mix transport
+    pub private: bool,
+    /// When false, the dataset is neither announced to the DHT nor served to other peers
+    pub advertise: bool,
     /// Expected dataset size (for progress tracking)
     pub dataset_size: Option<usize>,
     /// Whether to auto-detect dataset size
@@ -221,6 +261,8 @@ impl std::fmt::Debug for DownloadStreamOptions {
             .field("chunk_size", &self.chunk_size)
             .field("on_progress", &self.on_progress.is_some())
             .field("local", &self.local)
+            .field("private", &self.private)
+            .field("advertise", &self.advertise)
             .field("dataset_size", &self.dataset_size)
             .field("dataset_size_auto", &self.dataset_size_auto)
             .field("timeout", &self.timeout)
@@ -238,6 +280,8 @@ impl Clone for DownloadStreamOptions {
             chunk_size: self.chunk_size,
             on_progress: None, // Cannot clone callback
             local: self.local,
+            private: self.private,
+            advertise: self.advertise,
             dataset_size: self.dataset_size,
             dataset_size_auto: self.dataset_size_auto,
             timeout: self.timeout,
@@ -256,6 +300,8 @@ impl DownloadStreamOptions {
             chunk_size: Some(64 * 1024), // 64 KiB default (nim MaxBlockSize is 512 KiB)
             on_progress: None,
             local: false,
+            private: false,
+            advertise: true,
             dataset_size: None,
             dataset_size_auto: true,
             timeout: Some(300), // 5 minutes default
@@ -293,6 +339,18 @@ impl DownloadStreamOptions {
     /// Set whether to download locally only
     pub fn local(mut self, local: bool) -> Self {
         self.local = local;
+        self
+    }
+
+    /// Set whether to download through the Mix transport
+    pub fn private(mut self, private: bool) -> Self {
+        self.private = private;
+        self
+    }
+
+    /// Set whether to announce the dataset to the DHT and serve it to other peers
+    pub fn advertise(mut self, advertise: bool) -> Self {
+        self.advertise = advertise;
         self
     }
 
@@ -355,6 +413,43 @@ impl DownloadStreamOptions {
         }
 
         Ok(())
+    }
+}
+
+/// Options to retrieve a manifest
+#[derive(Debug, Clone)]
+pub struct DownloadManifestOptions {
+    /// Whether to fetch the manifest through the Mix transport
+    pub private: bool,
+    /// When false, the dataset is neither announced to the DHT nor served to other peers
+    pub advertise: bool,
+}
+
+impl Default for DownloadManifestOptions {
+    fn default() -> Self {
+        Self {
+            private: false,
+            advertise: true,
+        }
+    }
+}
+
+impl DownloadManifestOptions {
+    /// Create new download manifest options
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set whether to fetch the manifest through the Mix transport
+    pub fn private(mut self, private: bool) -> Self {
+        self.private = private;
+        self
+    }
+
+    /// Set whether to announce the dataset to the DHT and serve it to other peers
+    pub fn advertise(mut self, advertise: bool) -> Self {
+        self.advertise = advertise;
+        self
     }
 }
 

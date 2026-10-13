@@ -1,6 +1,6 @@
 use storage_bindings::{
     download_cancel, download_chunk, download_init, upload_cancel, upload_chunk, upload_finalize,
-    upload_init, LogLevel, StorageConfig, StorageNode, UploadOptions,
+    upload_init, FetchOptions, LogLevel, StorageConfig, StorageNode, UploadOptions,
 };
 use tempfile::tempdir;
 
@@ -14,8 +14,7 @@ async fn test_chunk_operations() -> Result<(), Box<dyn std::error::Error>> {
         .log_level(LogLevel::Error)
         .data_dir(temp_dir.path().join("storage_data"))
         .storage_quota(100 * 1024 * 1024)
-        .block_retries(3000)
-        .discovery_port(8094);
+        .block_retries(3000);
 
     let node = StorageNode::new(config).await?;
     node.start().await?;
@@ -50,7 +49,7 @@ async fn test_chunk_operations() -> Result<(), Box<dyn std::error::Error>> {
     let exists = storage_bindings::exists(&node, &cid).await?;
     assert!(exists, "Content should exist after upload");
 
-    let manifest = storage_bindings::fetch(&node, &cid).await?;
+    let manifest = storage_bindings::fetch(&node, &cid, &FetchOptions::new()).await?;
     println!(
         "Manifest: CID={}, Size={} bytes",
         manifest.cid, manifest.dataset_size

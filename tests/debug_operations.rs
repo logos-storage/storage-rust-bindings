@@ -17,8 +17,7 @@ async fn test_debug_operations() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = StorageConfig::new()
         .log_level(storage_bindings::LogLevel::Info)
-        .data_dir(temp_dir.path().join("storage_data"))
-        .discovery_port(8095);
+        .data_dir(temp_dir.path().join("storage_data"));
 
     let node = StorageNode::new(config).await?;
     node.start().await?;
@@ -27,10 +26,6 @@ async fn test_debug_operations() -> Result<(), Box<dyn std::error::Error>> {
     let debug_info = storage_bindings::debug(&node).await?;
     println!("Peer ID: {}", debug_info.peer_id());
     println!("Address count: {}", debug_info.address_count());
-    println!(
-        "Announce address count: {}",
-        debug_info.provider_address_count()
-    );
     println!(
         "Discovery node count: {}",
         debug_info.discovery_node_count()
@@ -105,8 +100,7 @@ async fn test_debug_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nTesting debug operations without starting node:");
     let config2 = StorageConfig::new()
         .log_level(storage_bindings::LogLevel::Error)
-        .data_dir(temp_dir.path().join("storage_data2"))
-        .discovery_port(8096);
+        .data_dir(temp_dir.path().join("storage_data2"));
 
     let node2 = StorageNode::new(config2).await?;
 
@@ -170,10 +164,6 @@ async fn test_debug_operations() -> Result<(), Box<dyn std::error::Error>> {
     let final_debug_info = storage_bindings::debug(&node).await?;
     println!("  Peer ID: {}", final_debug_info.peer_id());
     println!("  Address count: {}", final_debug_info.address_count());
-    println!(
-        "  Announce address count: {}",
-        final_debug_info.provider_address_count()
-    );
     println!(
         "  Discovery node count: {}",
         final_debug_info.discovery_node_count()

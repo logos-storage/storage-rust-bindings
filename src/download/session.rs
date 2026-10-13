@@ -15,6 +15,9 @@ use crate::node::lifecycle::StorageNode;
 /// Creates a new download session for the specified content ID (CID) with the given options.
 /// This prepares the node to download content from the Storage network.
 ///
+/// If a session already exists for this CID, it is kept and the new `local`,
+/// `advertise` and `chunk_size` options are ignored. A different `private` value is an error.
+///
 /// # Arguments
 ///
 /// * `node` - The Storage node to use for the download
@@ -54,7 +57,9 @@ pub async fn download_init(node: &StorageNode, cid: &str, options: &DownloadOpti
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                false,
+                options.local,
+                options.private,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )
@@ -151,7 +156,9 @@ pub(crate) fn download_init_sync(
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                false,
+                options.local,
+                options.private,
+                options.advertise,
                 Some(c_callback),
                 context_ptr.as_ptr(),
             )

@@ -19,6 +19,9 @@ use std::sync::{Arc, Mutex};
 /// to a file, writer, or custom callback. This function handles the complete download
 /// process including session management, progress tracking, and error handling.
 ///
+/// If a session already exists for this CID, it is kept and the `local` and `advertise`
+/// options are ignored. A different `private` value is an error.
+///
 /// # Arguments
 ///
 /// * `node` - The Storage node to use for the download
@@ -109,7 +112,10 @@ pub async fn download_stream(
     let download_options = DownloadOptions::new(cid)
         .chunk_size(chunk_size)
         .timeout(options.timeout.unwrap_or(300))
-        .verify(options.verify);
+        .verify(options.verify)
+        .local(options.local)
+        .private(options.private)
+        .advertise(options.advertise);
 
     download_init_sync(node, cid, &download_options)?;
 
@@ -129,7 +135,6 @@ pub async fn download_stream(
                 ctx as *mut _,
                 c_cid.as_ptr(),
                 chunk_size,
-                options.local,
                 c_filepath.as_ptr(),
                 Some(c_callback),
                 context_ptr.as_ptr(),
@@ -197,9 +202,7 @@ pub async fn download_to_file(
     cid: &str,
     filepath: &std::path::Path,
 ) -> Result<DownloadResult> {
-    let options = DownloadStreamOptions::new(cid)
-        .filepath(filepath.to_path_buf())
-        .local(true);
+    let options = DownloadStreamOptions::new(cid).filepath(filepath.to_path_buf());
 
     download_stream(node, cid, options).await
 }
