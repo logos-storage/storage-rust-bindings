@@ -164,7 +164,7 @@ cargo test --test $test_name
 - **storage_management**: Demonstrates storage management operations
 - **two_node_network**: Shows two-node network setup and data transfer
 - **thread_safe_tests**: Tests thread-safe node lifecycle and concurrent operations
-- **private_queries**: Tests that a private fetch fails without Mix
+- **private_fetch**: Tests that a private fetch fails without Mix
 - **advertise**: Tests the advertise state of a dataset
 - **network**: Tests the network preset
 
